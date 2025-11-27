@@ -88,7 +88,86 @@ class Logic:
         return moves
 
     def apply_action(self,action):
-        pass
+
+        src, tgt = action
+        reward = 0
+
+        if src == -1:
+            if not self.stock: return -10
+
+            for col in self.columns:
+                if self.stock:
+                    c = self.stock.pop()
+                    c.face_up = True
+                    col.append(c)
+
+            self._check_completed_sets()
+            return 2
+
+        if not self.columns[src]: return -10
+
+        move_idx = -1
+        curr_rank = self.columns[src][-1].rank
+
+        for i in range(len(self.columns[src]) -2, -1, -1):
+            card = self.columns[src][i]
+            if not card.face_up:
+                move_idx = i + 1
+                break
+            if card.rank != curr_rank + 1:
+                move_idx = i + 1
+                break
+            curr_rank = card.rank
+
+            if move_idx == -1: move_idx = 0
+
+            moving_stack = self.columns[src][move_idx:]
+            top_moving = moving_stack[0]
+
+            valid_target = False
+            if not self.columns[tgt]: valid_target = True
+            elif self.columns[tgt][-1].rank == top_moving.rank + 1: valid_target = True
+
+            if not valid_target:
+                return -10
+
+            self.columns[tgt].extend(moving_stack)
+            self.columns[src] = self.columns[src][:move_idx]
+
+            reward = 5
+
+            if self.columns[src] and not self.columns[src][-1].face_up:
+                self.columns[src][-1].face_up = True
+                reward += 20
+
+            reward += self._check_completed_sets()
+
+            return reward
 
     def _check_completed_sets(self):
-        pass
+        sets_found_reward = 0
+        for col in self.columns:
+            if len(col) < 13: continue
+
+            is_seq = True
+            last_13 = col[-13:]
+
+            if last_13[0].rank != 13 or last_13[-1].rank + 1:
+                continue
+
+            for i in range(12):
+                if last_13[i].rank != last_13[i+1].rank + 1:
+                    is_seq = False
+                    break
+
+            if is_seq:
+                for _ in range(13): col.pop()
+                self.foundation_count += 1
+                sets_found_reward += 100
+
+                if col and not col[-1].face_up:
+                    col[-1].face_up = True
+                    sets_found_reward += 20
+
+        return sets_found_reward
+
