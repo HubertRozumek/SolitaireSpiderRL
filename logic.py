@@ -54,7 +54,38 @@ class Logic:
         self.stock = full_deck
 
     def get_legal_moves(self):
-        pass
+
+        moves = []
+
+        for s_idx, src_col in enumerate(self.columns):
+            if not src_col: continue
+
+            valid_stack_height = 0
+            for i in range(len(src_col) - 1, -1, -1):
+                if not src_col[i].face_up: break
+                if i < len(src_col) -1:
+                    if src_col[i].rank != src_col[i+1].rank +1:
+                        break
+                valid_stack_height += 1
+
+            moving_card = src_col[-valid_stack_height]
+
+            for t_idx, tgt_col in enumerate(self.columns):
+                if s_idx == t_idx: continue
+
+                if not tgt_col:
+                    moves.append((s_idx, t_idx))
+                else:
+                    target_card = tgt_col[-1]
+                    if target_card.rank == moving_card.rank + 1:
+                        moves.append((s_idx, t_idx))
+
+        if self.stock:
+            empty_cols = any(len(c) == 0 for c in self.columns)
+            if not empty_cols:
+                moves.append((-1, -1))
+
+        return moves
 
     def apply_action(self,action):
         pass
