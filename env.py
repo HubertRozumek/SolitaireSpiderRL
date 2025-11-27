@@ -25,14 +25,29 @@ class Env(gym.Env):
         return self._get_obs(), {}
 
     def step(self, action):
+        reward = 0
+        terminated = False
+        action_desc = "Illegal action"
+        move = (0, 0)
+
         if action == 100:
             move = (-1, -1)
             action_desc = "Deal"
-        else:
+        elif 0 <= action <= 99:
             src = action // 10
             tgt = action % 10
-            move = (src, tgt)
-            action_desc = f"{src}->{tgt}"
+
+            if 0 <= src < 10 and 0 <= tgt < 10:
+                move = (src, tgt)
+                action_desc = f"{src}->{tgt}"
+            else:
+                reward = -100
+                observation = self._get_obs()
+                return observation, reward, terminated, False, {}
+        else:
+            reward = -100
+            observation = self._get_obs()
+            return observation, reward, terminated, False, {}
 
         reward = self.game.apply_action(move)
         reward -= 0.1
@@ -65,3 +80,19 @@ class Env(gym.Env):
                     obs[i,j,1] = 0.0
 
         return obs
+
+    def action_masks(self):
+
+        mask = np.zeros(self.action_space.n, dtype=bool)
+
+        legal_moves = self.game.get_legal_moves()
+
+        for src, tgt in legal_moves:
+            if src == -1:
+                mask[100] = True
+
+            else:
+                action_index = src * 10 + tgt
+                mask[action_index] = True
+
+        return mask

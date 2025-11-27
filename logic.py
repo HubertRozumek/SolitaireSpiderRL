@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 
 # CONFIG
 NUM_SUITS = 1
-NUM_COLUMNS = 1
+NUM_COLUMNS = 10
 NUM_CARDS = 104 # 2 decks
 
 @dataclass
@@ -34,7 +34,7 @@ class Logic:
         self.stock = []
         self.foundation_count = 0
 
-        full_deck = [Card(rank, 0) for rank in range(1, 14) for _ in range(8)]
+        full_deck = [Card(rank, 0, face_up=False) for rank in range(1, 14) for _ in range(8)]
         random.shuffle(full_deck)
 
         for i in range(54):
@@ -119,30 +119,30 @@ class Logic:
                 break
             curr_rank = card.rank
 
-            if move_idx == -1: move_idx = 0
+        if move_idx == -1: move_idx = 0
 
-            moving_stack = self.columns[src][move_idx:]
-            top_moving = moving_stack[0]
+        moving_stack = self.columns[src][move_idx:]
+        top_moving = moving_stack[0]
 
-            valid_target = False
-            if not self.columns[tgt]: valid_target = True
-            elif self.columns[tgt][-1].rank == top_moving.rank + 1: valid_target = True
+        valid_target = False
+        if not self.columns[tgt]: valid_target = True
+        elif self.columns[tgt][-1].rank == top_moving.rank + 1: valid_target = True
 
-            if not valid_target:
-                return -10
+        if not valid_target:
+            return -10
 
-            self.columns[tgt].extend(moving_stack)
-            self.columns[src] = self.columns[src][:move_idx]
+        self.columns[tgt].extend(moving_stack)
+        self.columns[src] = self.columns[src][:move_idx]
 
-            reward = 5
+        reward = 5
 
-            if self.columns[src] and not self.columns[src][-1].face_up:
-                self.columns[src][-1].face_up = True
-                reward += 20
+        if self.columns[src] and not self.columns[src][-1].face_up:
+            self.columns[src][-1].face_up = True
+            reward += 20
 
-            reward += self._check_completed_sets()
+        reward += self._check_completed_sets()
 
-            return reward
+        return reward
 
     def _check_completed_sets(self):
         sets_found_reward = 0
@@ -152,7 +152,7 @@ class Logic:
             is_seq = True
             last_13 = col[-13:]
 
-            if last_13[0].rank != 13 or last_13[-1].rank + 1:
+            if last_13[0].rank != 13 or last_13[-1].rank != 1:
                 continue
 
             for i in range(12):
