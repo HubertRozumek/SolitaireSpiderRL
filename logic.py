@@ -30,7 +30,28 @@ class Logic:
         self.reset()
 
     def reset(self):
-        pass
+        self.columns = [[] for _ in range(NUM_COLUMNS)]
+        self.stock = []
+        self.foundation_count = 0
+
+        full_deck = [Card(rank, 0) for rank in range(1, 14) for _ in range(8)]
+        random.shuffle(full_deck)
+
+        for i in range(54):
+            col_idx = i % NUM_COLUMNS
+            card = full_deck.pop()
+
+            if i >= 44:
+                card.face_up = True
+            elif i < 44:
+                card.face_up = False
+
+            self.columns[col_idx].append(card)
+
+        for col in self.columns:
+            if col: col[-1].face_up = True
+
+        self.stock = full_deck
 
     def get_legal_moves(self):
         pass
